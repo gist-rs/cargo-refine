@@ -91,9 +91,9 @@ beyond its compiled fix space. Counts below are measured by
 
 `cargo-heal` is also the client for **KAT**, the network's unit of account:
 
-- **Healing burns KAT** — 1 KAT per code word token processed. Your local meter
-  and charge ledger live under `.heal/` in your project; nothing is billed or
-  submitted without you.
+- **Healing burns KAT** — 1 KAT per million code-word tokens (the local meter
+  counts micro-KAT). Your meter and charge ledger live under `.heal/` in your
+  project; nothing is billed or submitted without you.
 - **Every account starts with a free grant** — 100,000,000 KAT, once per
   account key. Claiming it is local until the ledger syncs (below).
 - **Miners earn KAT** by contributing redacted fix spans that prove new value
@@ -110,7 +110,7 @@ beyond its compiled fix space. Counts below are measured by
 flowchart LR
     A["cargo heal --fix<br/>(modelless, local)"] --> B["1 KAT burned<br/>per code token"]
     B --> C["local charge ledger<br/>.heal/ - yours"]
-    A -. "redacted fix spans<br/>(opt-in, next release)" .-> D["trainer-quorum<br/>replay proof"]
+    A -. "redacted fix spans<br/>(opt-in --mine)" .-> D["trainer-quorum<br/>replay proof"]
     D -.-> F["mining reward<br/>decayed, first-come"]
     D -.-> G["better corpus<br/>next epoch"]
     G --> A
@@ -118,8 +118,8 @@ flowchart LR
 ```
 
 *Solid edges run today (the local meter + burn ledger ship in the binary).
-Dashed edges are the mining loop — it lands with the corpus-lease transport
-release, after its dependency license review completes.*
+Dashed edges are the mining loop — opt in once with `cargo heal --mine`;
+only redacted, signed batches ever leave the machine.*
 
 ### Join (60 seconds)
 
@@ -132,9 +132,10 @@ The key is a plain OpenSSH Ed25519 file under `~/.config/riir-heal/`. You can
 import an existing key instead: `cargo heal login --key <path>`. Nothing
 leaves your machine at this step.
 
-**Coming next release:** `cargo heal sync` (push redacted fix batches, pull the
-corpus lease) and `cargo heal claim` — the earning half of the loop. The CLI
-already prints them; they activate when the transport ships.
+**The earning half is live:** `cargo heal --mine` — run once to join: opts
+in, logs you in, syncs. After that, every heal run auto-syncs your redacted
+batch; `cargo heal sync` pushes manually. Miners are paid from 70% of every
+KAT the network burns, at each epoch settle.
 
 ### Service status
 
@@ -160,6 +161,41 @@ cargo heal login    # claim your 100M KAT devnet grant
 cargo heal sync     # push redacted batches (the mining contribution)
 cargo heal account  # burn, balance, grant, network state
 ```
+
+## Node tiers — what you can run
+
+One binary, four ways to run it. Roles (what you do) × tiers (the machine +
+account posture). Capabilities only: a tier earns only what settles on the
+network today — this table never promises a future reward class.
+
+| role ↓ · tier → | Lite · any desktop, free | Pro · any desktop + login | Max · CPU box, no GPU | Ultra · GPU rig / VPS |
+|---|---|---|---|---|
+| **Coder** — heal your own code | ✅ anonymous dry-run + fix | ✅ optional login; the free grant covers burns | — | — |
+| **Miner** — contribute batches, earn KAT | — anonymous earns nothing | ✅ **the earn tier today** | — | — |
+| **Fixer** — verify & fix the network's queue | — | — | operator lane runs today (our nodes) · third-party replay designed, **does not settle yet** | — |
+| **Trainer** — host the daily training window | — | — | — | **our replicas only at launch** |
+
+- **Lite** — the bare binary you just installed: modelless, offline,
+  anonymous, free forever. Outside the economy by design: no KAT, no
+  earnings, never on the leaderboard.
+- **Pro** — the same binary with an account: `cargo heal login` once, then
+  `cargo heal --mine`. Every synced batch that proves novel becomes a claim
+  on the epoch pool — every row on the
+  [leaderboard](https://ai.gist.rs/leaderboard) is a Pro miner.
+- **Max** — a CPU box (~2–4 vCPU, 4–8 GB) contributor lane. The API drain
+  over the unproven queue runs today as the operator's own nodes, and its
+  accepted work settles through the miner rows. Third-party replay
+  verification (re-run the fixes on your own rig, agree with a second
+  verifier) is designed, but its reward class does not settle yet —
+  nothing is promised until it does.
+- **Ultra** — the trainer node: stake, host the daily training window. At
+  launch it runs on our replicas only; third-party installs open when the
+  stake/vessel machinery matures.
+
+Burn at Pro: 1 KAT per million code-word tokens; the one-time free grant is
+100,000,000 KAT per account. Start at Lite (install above) —
+`cargo heal login && cargo heal --mine` turns the same install into Pro.
+Live tier details: <https://ai.gist.rs>.
 
 ## Privacy & data posture
 
