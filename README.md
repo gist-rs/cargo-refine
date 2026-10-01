@@ -1,4 +1,4 @@
-# cargo-heal
+# cargo-refine
 
 **A modelless code healer for Rust — point it at your crate, keep the mechanical fixes.**
 No trained weights, no AI service, no network calls at heal time. Your code never leaves your machine.
@@ -8,31 +8,31 @@ No trained weights, no AI service, no network calls at heal time. Your code neve
 macOS / Linux:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gist-rs/cargo-heal/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/gist-rs/cargo-refine/main/install.sh | sh
 ```
 
 Windows (PowerShell):
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/gist-rs/cargo-heal/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/gist-rs/cargo-refine/main/install.ps1 | iex
 ```
 
 Homebrew (prebuilt formula — nothing is compiled):
 
 ```sh
-brew tap gist-rs/tap && brew trust gist-rs/tap && brew install cargo-heal
+brew tap gist-rs/tap && brew trust gist-rs/tap && brew install cargo-refine
 ```
 
 Scoop:
 
 ```powershell
 scoop bucket add gist-rs https://github.com/gist-rs/scoop-bucket
-scoop install cargo-heal
+scoop install cargo-refine
 ```
 
-Installers place `cargo-heal` in `~/.cargo/bin` (Windows: `%USERPROFILE%\.cargo\bin`),
-so the `cargo heal` subcommand works in any Rust project. They resolve the latest
-release from the GitHub API (pin one with `CARGO_HEAL_VERSION=v0.1.3` on install.sh,
+Installers place `cargo-refine` in `~/.cargo/bin` (Windows: `%USERPROFILE%\.cargo\bin`),
+so the `cargo refine` subcommand works in any Rust project. They resolve the latest
+release from the GitHub API (pin one with `CARGO_REFINE_VERSION=v0.1.3` on install.sh,
 `-Version v0.1.3` on install.ps1), auto-pick the Windows `msvc`/`gnu` asset —
 preferring `msvc` when a release ships both — and verify every download against
 the release's `SHA256SUMS` before extracting anything.
@@ -53,9 +53,9 @@ the release's `SHA256SUMS` before extracting anything.
 Then, inside a Rust crate:
 
 ```sh
-cargo heal --suggest src/   # ranked suggestions — writes nothing
-cargo heal --fix src/       # bounded, span-preserving fixes (review before writing)
-cargo heal --fix --write .  # apply + automatic rustfmt when the file was rustfmt-clean
+cargo refine --suggest src/   # ranked suggestions — writes nothing
+cargo refine --fix src/       # bounded, span-preserving fixes (review before writing)
+cargo refine --fix --write .  # apply + automatic rustfmt when the file was rustfmt-clean
 ```
 
 ## What it heals
@@ -64,16 +64,16 @@ Every rule is a **bounded fix**: a narrowly-scoped, mechanical transform with a
 compile-checked or syntax-checked safety gate. The healer is deliberately
 conservative — it declines anything it cannot prove safe, and never invents
 beyond its compiled fix space. Counts below are measured by
-`cargo heal --corpus-stats` at release time (2026-09-07, v0.1.x binaries).
+`cargo refine --corpus-stats` at release time (2026-09-07, v0.1.x binaries).
 
 | Domain | In the binary | Rules | What it fixes | Status |
 |---|---|---|---|---|
 | `clippy_lints` | yes, default | **49** | `cargo clippy` warnings across style / complexity / perf classes (38 with bounded auto-fixes) | GOAT-gated |
 | `rust_perf` | yes, default | **112** | Rust performance patterns (allocation, cloning, loop shape, collection choice) | benchmark-Pareto promoted |
 | `docker` | yes, default | **31** | Dockerfile issues (hadolint-shaped findings, bounded fixes; no registry calls) | GOAT-gated |
-| `rustc_errors` | yes, default | E0597 family | `cargo heal --fix-compile` — compile-error repair keyed by error code, bounded by `--max-iters` | GOAT-gated (N=212) |
+| `rustc_errors` | yes, default | E0597 family | `cargo refine --fix-compile` — compile-error repair keyed by error code, bounded by `--max-iters` | GOAT-gated (N=212) |
 | latent retrieval | yes, default | — | span-level rule ranking over the enabled domains (`--suggest` / `--fix`), self-evolve trajectory store kept locally | default-on |
-| KAT account | yes, default (v0.1.1+) | — | `cargo heal login` / `account` — the identity + burn/balance view for the heal network (below) | devnet |
+| KAT account | yes, default (v0.1.1+) | — | `cargo refine login` / `account` — the identity + burn/balance view for the heal network (below) | devnet |
 | `kernel_opt` | not in this binary | 559 | GPU kernel optimization rules | ships in a future release |
 | `sec` | not in this binary | 12 | security-pattern bounded fixes | ships in a future release |
 
@@ -89,7 +89,7 @@ beyond its compiled fix space. Counts below are measured by
 
 ## The KAT heal network
 
-`cargo-heal` is also the client for **KAT**, the network's unit of account:
+`cargo-refine` is also the client for **KAT**, the network's unit of account:
 
 - **Healing burns KAT** — 1 KAT per million code-word tokens (the local meter
   counts micro-KAT). Your meter and charge ledger live under `.heal/` in your
@@ -108,7 +108,7 @@ beyond its compiled fix space. Counts below are measured by
 
 ```mermaid
 flowchart LR
-    A["cargo heal --fix<br/>(modelless, local)"] --> B["1 KAT burned<br/>per code token"]
+    A["cargo refine --fix<br/>(modelless, local)"] --> B["1 KAT burned<br/>per code token"]
     B --> C["local charge ledger<br/>.heal/ - yours"]
     A -. "redacted fix spans<br/>(opt-in --mine)" .-> D["trainer-quorum<br/>replay proof"]
     D -.-> F["mining reward<br/>decayed, first-come"]
@@ -118,23 +118,23 @@ flowchart LR
 ```
 
 *Solid edges run today (the local meter + burn ledger ship in the binary).
-Dashed edges are the mining loop — opt in once with `cargo heal --mine`;
+Dashed edges are the mining loop — opt in once with `cargo refine --mine`;
 only redacted, signed batches ever leave the machine.*
 
 ### Join (60 seconds)
 
 ```sh
-cargo heal login     # one-time: creates your Ed25519 account key (or adopts your SSH key)
-cargo heal account   # your account id, grant projection, per-repo burn, balance
+cargo refine login     # one-time: creates your Ed25519 account key (or adopts your SSH key)
+cargo refine account   # your account id, grant projection, per-repo burn, balance
 ```
 
 The key is a plain OpenSSH Ed25519 file under `~/.config/riir-heal/`. You can
-import an existing key instead: `cargo heal login --key <path>`. Nothing
+import an existing key instead: `cargo refine login --key <path>`. Nothing
 leaves your machine at this step.
 
-**The earning half is live:** `cargo heal --mine` — run once to join: opts
+**The earning half is live:** `cargo refine --mine` — run once to join: opts
 in, logs you in, syncs. After that, every heal run auto-syncs your redacted
-batch; `cargo heal sync` pushes manually. Miners are paid from 70% of every
+batch; `cargo refine sync` pushes manually. Miners are paid from 70% of every
 KAT the network burns, at each epoch settle.
 
 ### Service status
@@ -154,12 +154,12 @@ release binary.
 ### The just-works surface (v0.1.2)
 
 ```sh
-cargo heal          # DRY RUN: review what would be fixed, zero edits
-cargo heal --fix    # REAL fix: writes in place (compile-gated on fix builds)
-cargo heal --mine   # what KAT mining is + the policy + how to earn
-cargo heal login    # claim your 100M KAT devnet grant
-cargo heal sync     # push redacted batches (the mining contribution)
-cargo heal account  # burn, balance, grant, network state
+cargo refine          # DRY RUN: review what would be fixed, zero edits
+cargo refine --fix    # REAL fix: writes in place (compile-gated on fix builds)
+cargo refine --mine   # what KAT mining is + the policy + how to earn
+cargo refine login    # claim your 100M KAT devnet grant
+cargo refine sync     # push redacted batches (the mining contribution)
+cargo refine account  # burn, balance, grant, network state
 ```
 
 ## Node tiers — what you can run
@@ -178,8 +178,8 @@ network today — this table never promises a future reward class.
 - **Lite** — the bare binary you just installed: modelless, offline,
   anonymous, free forever. Outside the economy by design: no KAT, no
   earnings, never on the leaderboard.
-- **Pro** — the same binary with an account: `cargo heal login` once, then
-  `cargo heal --mine`. Every synced batch that proves novel becomes a claim
+- **Pro** — the same binary with an account: `cargo refine login` once, then
+  `cargo refine --mine`. Every synced batch that proves novel becomes a claim
   on the epoch pool — every row on the
   [leaderboard](https://ai.gist.rs/leaderboard) is a Pro miner.
 - **Max** — a CPU box (~2–4 vCPU, 4–8 GB) contributor lane. The API drain
@@ -194,7 +194,7 @@ network today — this table never promises a future reward class.
 
 Burn at Pro: 1 KAT per million code-word tokens; the one-time free grant is
 100,000,000 KAT per account. Start at Lite (install above) —
-`cargo heal login && cargo heal --mine` turns the same install into Pro.
+`cargo refine login && cargo refine --mine` turns the same install into Pro.
 Live tier details: <https://ai.gist.rs>.
 
 ## Privacy & data posture
@@ -218,7 +218,7 @@ sha256sum -c SHA256SUMS         # Linux / Windows (Git Bash)
 ```
 
 Binaries are not code-signed yet (SmartScreen/Gatekeeper may ask on first run).
-Release notes live on the [releases page](https://github.com/gist-rs/cargo-heal/releases).
+Release notes live on the [releases page](https://github.com/gist-rs/cargo-refine/releases).
 
 ## FAQ
 
@@ -238,11 +238,11 @@ It re-runs the compiler (`cargo`/`clippy`) to prove each applied fix still
 compiles, and reverts any edit that breaks the build. Correctness over speed.
 
 **How do I update?**
-`brew upgrade cargo-heal` / `scoop update cargo-heal`, or re-run the installer
+`brew upgrade cargo-refine` / `scoop update cargo-refine`, or re-run the installer
 for your platform.
 
 **How do I uninstall?**
-Delete `~/.cargo/bin/cargo-heal` (Windows: `%USERPROFILE%\.cargo\bin\cargo-heal.exe`)
+Delete `~/.cargo/bin/cargo-refine` (Windows: `%USERPROFILE%\.cargo\bin\cargo-refine.exe`)
 and, if you used the KAT features, `~/.config/riir-heal/`.
 
 ## Attribution
@@ -253,5 +253,5 @@ cargo-about at release time from the exact shipping feature set).
 
 ## License
 
-The `cargo-heal` binary is distributed under MIT OR Apache-2.0. This repository
+The `cargo-refine` binary is distributed under MIT OR Apache-2.0. This repository
 publishes releases, installers, and documentation only — no source.

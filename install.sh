@@ -1,11 +1,11 @@
 #!/bin/sh
-# cargo-heal installer (binary-only distribution).
-# Usage: curl -fsSL https://raw.githubusercontent.com/gist-rs/cargo-heal/main/install.sh | sh
-# Pin a version: CARGO_HEAL_VERSION=v0.1.3 sh install.sh
+# cargo-refine installer (binary-only distribution).
+# Usage: curl -fsSL https://raw.githubusercontent.com/gist-rs/cargo-refine/main/install.sh | sh
+# Pin a version: CARGO_REFINE_VERSION=v0.1.3 sh install.sh
 set -eu
 
-REPO="gist-rs/cargo-heal"
-DEST="${CARGO_HEAL_INSTALL_DIR:-$HOME/.cargo/bin}"
+REPO="gist-rs/cargo-refine"
+DEST="${CARGO_REFINE_INSTALL_DIR:-$HOME/.cargo/bin}"
 
 need() { command -v "$1" >/dev/null 2>&1; }
 need curl || { echo "error: curl is required" >&2; exit 1; }
@@ -34,8 +34,8 @@ case "$OS" in
 esac
 
 # One API call covers both the tag and the asset list (public repo - no auth).
-if [ -n "${CARGO_HEAL_VERSION:-}" ]; then
-    RELEASE_JSON="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/tags/$CARGO_HEAL_VERSION")"
+if [ -n "${CARGO_REFINE_VERSION:-}" ]; then
+    RELEASE_JSON="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/tags/$CARGO_REFINE_VERSION")"
 else
     RELEASE_JSON="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest")"
 fi
@@ -48,12 +48,24 @@ ASSETS="$(printf '%s\n' "$RELEASE_JSON" |
     sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
     sed 's#.*/##')"
 
-ASSET="cargo-heal-$TAG-$TARGET.tar.gz"
+# Asset spelling: releases from v0.2.0 carry cargo-refine-* assets (binary
+# cargo-refine inside); pre-rename releases (<= v0.1.4) carry cargo-heal-*
+# with the cargo-heal binary. Resolve against the release's real asset
+# list — never assumed to exist.
+ASSET="cargo-refine-$TAG-$TARGET.tar.gz"
+BIN="cargo-refine"
 if ! printf '%s\n' "$ASSETS" | grep -Fqx "$ASSET"; then
-    echo "error: $ASSET is not an asset of release $TAG" >&2
-    echo "tar.gz assets in this release:" >&2
-    printf '%s\n' "$ASSETS" | grep -E '\.tar\.gz$' >&2 || echo "  (none)" >&2
-    exit 1
+    LEGACY="cargo-heal-$TAG-$TARGET.tar.gz"
+    if printf '%s\n' "$ASSETS" | grep -Fqx "$LEGACY"; then
+        ASSET="$LEGACY"
+        BIN="cargo-heal"
+        echo "note: $TAG predates the rename - installing the cargo-heal binary" >&2
+    else
+        echo "error: neither $ASSET nor $LEGACY is an asset of release $TAG" >&2
+        echo "tar.gz assets in this release:" >&2
+        printf '%s\n' "$ASSETS" | grep -E '\.tar\.gz$' >&2 || echo "  (none)" >&2
+        exit 1
+    fi
 fi
 
 BASE="https://github.com/$REPO/releases/download/$TAG"
@@ -79,11 +91,11 @@ fi
 
 mkdir -p "$DEST"
 tar -xzf "$TMP/$ASSET" -C "$TMP"
-mv "$TMP/cargo-heal" "$DEST/cargo-heal"
-chmod +x "$DEST/cargo-heal"
+mv "$TMP/$BIN" "$DEST/$BIN"
+chmod +x "$DEST/$BIN"
 
-echo "installed cargo-heal $TAG ($TARGET) -> $DEST/cargo-heal"
+echo "installed $BIN $TAG ($TARGET) -> $DEST/$BIN"
 case ":$PATH:" in
     *":$DEST:"*) ;;
-    *) echo "note: $DEST is not on your PATH - add it to use 'cargo heal'" ;;
+    *) echo "note: $DEST is not on your PATH - add it to use 'cargo $BIN'" ;;
 esac
