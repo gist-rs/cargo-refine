@@ -64,7 +64,7 @@ try {
     Move-Item -Force (Join-Path $tmp "$bin.exe") (Join-Path $Dest "$bin.exe")
     Write-Host "installed $bin $tag (x86_64-pc-windows-$flavor) -> $Dest\$bin.exe"
     if (($env:Path -split ';') -notcontains $Dest) {
-        Write-Host "note: $Dest is not on your PATH - add it to use 'cargo $bin'"
+        Write-Host "note: $Dest is not on your PATH - add it to use 'cargo $($bin.Substring(6))'"
     }
 }
 finally {

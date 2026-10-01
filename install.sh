@@ -97,5 +97,5 @@ chmod +x "$DEST/$BIN"
 echo "installed $BIN $TAG ($TARGET) -> $DEST/$BIN"
 case ":$PATH:" in
     *":$DEST:"*) ;;
-    *) echo "note: $DEST is not on your PATH - add it to use 'cargo $BIN'" ;;
+    *) echo "note: $DEST is not on your PATH - add it to use 'cargo ${BIN#cargo-}'" ;;
 esac
