@@ -186,5 +186,26 @@ exact feature set that ships.
 
 ## License
 
-The `cargo-refine` binary is distributed under MIT OR Apache-2.0. This repository
-publishes releases, installers and documentation only — no source.
+`cargo-refine` is free to use, for personal and commercial work, under the
+[Refine End User License Agreement](LICENSE.md). It is not open source: the binary
+is licensed, not sold, and this repository publishes releases, installers and
+documentation only. In short:
+
+- **You may** install and run it on any machines you control, including CI, on
+  your own code or code you are authorised to change. Your code and its fixes stay
+  yours.
+- **You may not** resell or redistribute it (point people at this repository
+  instead), reverse engineer it, or bypass its metering, billing, account or
+  rule-set controls.
+- **Mining (`--mine`) is opt-in.** If you turn it on, you confirm you may share
+  that code, and you license the snippets it sends to us to improve the rule
+  sets. Only mine repositories you are allowed to share code from.
+- **KAT** is an internal service credit: no cash value, not redeemable.
+- **No warranty.** Automated fixes can be wrong. Review changes before you
+  commit them. Our liability is limited as set out in the agreement.
+
+The [agreement](LICENSE.md) is what binds; this list is a summary. It applies to
+releases published from 2026-10-03 on. Copies of v0.2.0 and earlier keep the
+"MIT OR Apache-2.0" notice they shipped with. Every archive ships `LICENSE.md` and
+`THIRD_PARTY_LICENSES.md`, which lists the open-source crates inside the binary
+with their licence texts.
